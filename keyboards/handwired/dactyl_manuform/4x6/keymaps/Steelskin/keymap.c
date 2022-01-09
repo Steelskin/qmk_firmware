@@ -1,14 +1,5 @@
 #include QMK_KEYBOARD_H
 
-enum _layer {
-  _BASE_WIN,
-  _BASE_MAC,
-  _BASE,
-  _NUMS,
-  _NUMPAD,
-  _FKEYS
-};
-
 #define TG_NUMS TG(_NUMS)
 #define TG_NUMPAD TG(_NUMPAD)
 #define TG_FKEYS TG(_FKEYS)
@@ -92,77 +83,71 @@ void process_combo_event(uint16_t combo_index, bool pressed) {
     }
 }
 
-// Tap dance. Double-tap ` for ESC.
-// Lshift: single tap for left paren, double tap for caps lock, hold for shift.
+// Tap dance.
+// Grv: double-tap for Escape
+// Lshift: single-tap for left paren, double-tap for caps lock, hold for shift.
+// Space: tap for space, single-hold for NUMS, double-hold for shited NUMS.
 enum {
-    TD_GRV_ESC,
-    TD_LSHIFT
+    TD_GRV,
+    TD_LSHIFT,
+    TD_SPACE,
 };
 
-// Define a type for as many tap dance states as you need
 typedef enum {
     TD_NONE,
-    TD_UNKNOWN,
     TD_SINGLE_TAP,
     TD_SINGLE_HOLD,
-    TD_DOUBLE_TAP
+    TD_DOUBLE_TAP,
+    TD_DOUBLE_HOLD,
+    TD_TRIPLE_TAP,
+    TD_TRIPLE_HOLD,
+    TD_MORE_HOLD,
+    TD_MORE_TAP,
 } td_state_t;
 
 td_state_t cur_dance(qk_tap_dance_state_t *state);
+void grv_finished(qk_tap_dance_state_t *state, void *user_data);
+void grv_reset(qk_tap_dance_state_t *state, void *user_data);
 void lshift_finished(qk_tap_dance_state_t *state, void *user_data);
 void lshift_reset(qk_tap_dance_state_t *state, void *user_data);
+void space_tap(qk_tap_dance_state_t* state, void* user_data);
+void space_finished(qk_tap_dance_state_t *state, void *user_data);
+void space_reset(qk_tap_dance_state_t *state, void *user_data);
 
 qk_tap_dance_action_t tap_dance_actions[] = {
-    [TD_GRV_ESC] = ACTION_TAP_DANCE_DOUBLE(KC_GRV, KC_ESC),
+    [TD_GRV] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, grv_finished, grv_reset),
     [TD_LSHIFT] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, lshift_finished, lshift_reset),
+    [TD_SPACE] = ACTION_TAP_DANCE_FN_ADVANCED(space_tap, space_finished, space_reset),
 };
-
-// Custom key codes.
-// TO_BASE: Fix the non-working transparent key and TO commands
-enum my_keycodes {
-    MY_TO_BASE = SAFE_RANGE,
-};
-
-bool process_record_user(uint16_t keycode, keyrecord_t* record) {
-    switch(keycode) {
-        case MY_TO_BASE:
-            if (record->event.pressed) {
-                layer_clear();
-                layer_move(_BASE);
-            }
-            return false;
-    }
-    return true;
-}
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     /* Base for win + unix
-     * +------+------+                             +------+------+
-     * | CTLO | LGUI |                             | LALTO| RALTO|
-     * +------+------+                             +------+------+
+     * +------+------+
+     * | CTLO | LGUI |
+     * +------+------+
      */
     [_BASE_WIN] = LAYOUT(
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        OSM(MOD_LCTL), KC_LGUI, OSM(MOD_LALT), OSM(MOD_RALT),
-        KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO),
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        OSM(MOD_LCTL), KC_LGUI, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX),
 
     /* Base for Mac
-     * +------+------+                             +------+------+
-     * | LGUIO| CTLO |                             | LALTO| RALTO|
-     * +------+------+                             +------+------+
+     * +------+------+
+     * | LGUIO| CTLO |
+     * +------+------+
      */
     [_BASE_MAC] = LAYOUT(
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
-        OSM(MOD_LGUI), OSM(MOD_LCTL), OSM(MOD_LALT), OSM(MOD_RALT),
-        KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO,
-        KC_NO, KC_NO, KC_NO, KC_NO),
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        OSM(MOD_LGUI), OSM(MOD_LCTL), XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX),
 
     /* Base
      * +-----------------------------------------+                             +-----------------------------------------+
@@ -179,19 +164,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      *                             |      |      |                             |  ENT | SPC  |
      *                             +-------------+                             +-------------+
      *                                           +-------------+ +-------------+
-     *                                           | FKEYS| Mute | | PRTSC|TGNPAD|
+     *                                           | FKEYS| Mute | | VOLUP|TGNPAD|
      *                                           |------+------| |------+------|
-     *                                           | TGNUM| CAPS | |TOBASE| OSFT |
+     *                                           | TGNUM| PRTSC| | VOLDN| OSFT |
      *                                           +-------------+ +-------------+
      */
     [_BASE] = LAYOUT(
-        TD(TD_GRV_ESC), KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
+        TD(TD_GRV), KC_Q, KC_W, KC_E, KC_R, KC_T, KC_Y, KC_U, KC_I, KC_O, KC_P, KC_BSLS,
         KC_TAB, KC_A, KC_S, KC_D, KC_F, KC_G, KC_H, KC_J, KC_K, KC_L, KC_SCLN, KC_QUOT,
         TD(TD_LSHIFT), KC_Z, KC_X, KC_C, KC_V, KC_B, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_RSPC,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_BSPC, KC_DEL, LSFT_T(KC_ENT), LT(_NUMS, KC_SPC),
-        TG_FKEYS, KC_MUTE, KC_PSCR, TG_NUMPAD,
-        TG_NUMS, KC_CAPS, MY_TO_BASE, OSM(MOD_LSFT)),
+        _______, _______, OSM(MOD_LALT), OSM(MOD_RALT),
+        KC_BSPC, KC_DEL, LSFT_T(KC_ENT), TD(TD_SPACE),
+        TG_FKEYS, KC_MUTE, KC_VOLU, TG_NUMPAD,
+        TG_NUMS, KC_PSCR, KC_VOLD, OSM(MOD_LSFT)),
 
 
     /* Num + Moves
@@ -204,9 +189,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * +------+------+------+------+-------------+                             +-------------+------+------+------+------+
      *               |      |      |                                                         |      |      |
      *               +-------------+-------------+                             +-------------+-------------+
-     *                             |      |      |                             |      | base |
-     *                             |      |      |                             |      |  /   |
-     *                             |      |      |                             |      | spc  |
+     *                             |      |      |                             |      |      |
+     *                             |      |      |                             |      |      |
+     *                             |      |      |                             |      |      |
      *                             +-------------+                             +-------------+
      *                                           +-------------+ +-------------+
      *                                           |      |      | |      |      |
@@ -215,21 +200,21 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      *                                           +-------------+ +-------------+
      */
     [_NUMS] = LAYOUT(
-        KC_TRNS, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS,
-        KC_TRNS, KC_HOME, KC_PGUP, KC_PGDN, KC_END, KC_LBRC, KC_RBRC, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_EQL,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, MY_TO_BASE, KC_TRNS),
+        _______, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS,
+        _______, KC_HOME, KC_PGUP, KC_PGDN, KC_END, KC_LBRC, KC_RBRC, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_EQL,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______),
 
     /* Numpad
      * +-----------------------------------------+                             +-----------------------------------------+
      * |      |      |      |      |      |      |                             | NUMLK|   7  |   8  |  9   |   -  |   /  |
      * |------+------+------+------+------+------|                             |------+------+------+------+------+------|
-     * |      |      |      |      |      |      |                             | VOLUP|   4  |   5  |  6   |   +  |   *  |
+     * |      |      |      |      |      |      |                             |      |   4  |   5  |  6   |   +  |   *  |
      * |------+------+------+------+------+------|                             |------+------+------+------+------+------|
-     * |      |      |      |      |      |      |                             | VOLDN|   1  |   2  |  3   |  ENT | PLAY |
+     * |      |      |      |      |      |      |                             |      |   1  |   2  |  3   |  ENT | PLAY |
      * +------+------+------+------+-------------+                             +-------------+------+------+------+------+
      *               |      |      |                                                         |   0  |  .   |
      *               +-------------+-------------+                             +-------------+-------------+
@@ -244,13 +229,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      *                                           +-------------+ +-------------+
      */
     [_NUMPAD] = LAYOUT(
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_NLCK, KC_P7, KC_P8, KC_P9, KC_PMNS, KC_PSLS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_VOLU, KC_P4, KC_P5, KC_P6, KC_PPLS, KC_PAST,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_VOLD, KC_P1, KC_P2, KC_P3, KC_PENT, KC_MPLY,
-        KC_TRNS, KC_TRNS, KC_P0, KC_PDOT,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, MY_TO_BASE, KC_TRNS),
+        _______, _______, _______, _______, _______, _______, KC_NLCK, KC_P7, KC_P8, KC_P9, KC_PMNS, KC_PSLS,
+        _______, _______, _______, _______, _______, _______, _______, KC_P4, KC_P5, KC_P6, KC_PPLS, KC_PAST,
+        _______, _______, _______, _______, _______, _______, _______, KC_P1, KC_P2, KC_P3, KC_PENT, KC_MPLY,
+        _______, _______, KC_P0, KC_PDOT,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______),
 
     /* F keys
      * +-----------------------------------------+                             +-----------------------------------------+
@@ -273,66 +258,180 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      *                                           +-------------+ +-------------+
      */
     [_FKEYS] = LAYOUT(
-        KC_TRNS, KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, KC_TRNS, KC_TRNS,
-        KC_TRNS, KC_TRNS, MY_TO_BASE, KC_TRNS)
+        _______,   KC_F1, KC_F2, KC_F3, KC_F4, KC_F5, KC_F6, KC_F7, KC_F8, KC_F9, KC_F10, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______,
+        _______, _______, _______, _______)
 };
 
 // Custom tap dance implementation for left shift.
 td_state_t cur_dance(qk_tap_dance_state_t* state) {
-    if (state->count == 1) {
-        if (!state->pressed) {
+    switch(state->count) {
+        case 1:
+            if (state->pressed) {
+                return TD_SINGLE_HOLD;
+            }
             return TD_SINGLE_TAP;
-        }
-        return TD_SINGLE_HOLD;
+        case 2:
+            if (state->pressed) {
+                return TD_DOUBLE_HOLD;
+            }
+            return TD_DOUBLE_TAP;
+        case 3:
+            if (state->pressed) {
+                return TD_TRIPLE_HOLD;
+            }
+            return TD_TRIPLE_TAP;
     }
-    if (state->count == 2) {
-        return TD_DOUBLE_TAP;
+    if (state->pressed) {
+        return TD_MORE_HOLD;
     }
-    return TD_UNKNOWN
+    return TD_MORE_TAP;
 }
 
-// Initialize tap state associated with left shift.
+// Initialize tap state associated with tap-dance keys.
+static td_state_t grv_tap_state = TD_NONE;
 static td_state_t lshift_tap_state = TD_NONE;
+static td_state_t space_tap_state = TD_NONE;
 
-// Update the left shift state and register the necessary code.
-void lshift_finished(qk_tap_dance_state_t* state, void* user_data) {
-    lshift_tap_state = cur_dance(state);
-    switch (lshift_tap_state) {
+void grv_finished(qk_tap_dance_state_t* state, void* user_data) {
+    grv_tap_state = cur_dance(state);
+    switch (grv_tap_state) {
         case TD_SINGLE_TAP:
-            register_code16(KC_LPRN);
-            break;
-        case TD_SINGLE_HOLD:
-            register_mods(MOD_BIT(KC_LSFT));
+        case TD_TRIPLE_TAP:
+        case TD_MORE_TAP:
+            for (int i = 0; i < state->count; i++) {
+                tap_code(KC_GRV);
+            }
             break;
         case TD_DOUBLE_TAP:
-            register_code(KC_CAPS);
+            tap_code(KC_ESC);
+            break;
+        case TD_SINGLE_HOLD:
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            register_code(KC_GRV);
+            break;
+        case TD_DOUBLE_HOLD:
+            register_code(KC_ESC);
             break;
         default:
             break;
     }
 }
 
-// Release keys and reset the lshift state.
-void lshift_reset(qk_tap_dance_state_t* state, void* user_data) {
+void grv_reset(qk_tap_dance_state_t* state, void* user_data) {
+    switch (grv_tap_state) {
+        case TD_SINGLE_HOLD:
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            unregister_code(KC_GRV);
+            break;
+        case TD_DOUBLE_HOLD:
+            unregister_code(KC_ESC);
+            break;
+        default:
+            break;
+    }
+    grv_tap_state = TD_NONE;
+}
+
+void lshift_finished(qk_tap_dance_state_t* state, void* user_data) {
+    lshift_tap_state = cur_dance(state);
     switch (lshift_tap_state) {
+        case TD_DOUBLE_TAP:
+            tap_code(KC_CAPS);
+            break;
         case TD_SINGLE_TAP:
-            unregister_code16(KC_LPRN);
+        case TD_TRIPLE_TAP:
+        case TD_MORE_TAP:
+            for (int i = 0; i < state->count; i++) {
+                tap_code16(KC_LPRN);
+            }
             break;
         case TD_SINGLE_HOLD:
-            unregister_mods(MOD_BIT(KC_LSFT));
+        case TD_DOUBLE_HOLD:
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            register_mods(MOD_BIT(KC_LSFT));
             break;
-        case TD_DOUBLE_TAP:
-            unregister_code(KC_CAPS);
+        default:
+            break;
+    }
+}
+
+void lshift_reset(qk_tap_dance_state_t* state, void* user_data) {
+    switch (lshift_tap_state) {
+        case TD_SINGLE_HOLD:
+        case TD_DOUBLE_HOLD:
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            unregister_mods(MOD_BIT(KC_LSFT));
             break;
         default:
             break;
     }
     lshift_tap_state = TD_NONE;
+}
+
+// For space, handle the keycodes more quickly.
+void space_tap(qk_tap_dance_state_t* state, void* user_data) {
+    if (state->count < 3)  {
+        return;
+    }
+    if (state->count == 3) {
+        tap_code(KC_SPC);
+        tap_code(KC_SPC);
+    }
+    tap_code(KC_SPC);
+}
+
+void space_finished(qk_tap_dance_state_t* state, void* user_data) {
+    space_tap_state = cur_dance(state);
+    switch (space_tap_state) {
+        case TD_SINGLE_TAP:
+            tap_code(KC_SPC);
+            break;
+        case TD_DOUBLE_TAP:
+            tap_code(KC_SPC);
+            tap_code(KC_SPC);
+            break;
+        case TD_SINGLE_HOLD:
+            layer_on(_NUMS);
+            break;
+        case TD_DOUBLE_HOLD:
+            layer_on(_NUMS);
+            register_mods(MOD_BIT(KC_LSFT));
+            break;
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            register_code(KC_SPC);
+            break;
+        default:
+            break;
+    }
+}
+
+void space_reset(qk_tap_dance_state_t* state, void* user_data) {
+    switch (space_tap_state) {
+        case TD_SINGLE_HOLD:
+            layer_off(_NUMS);
+            break;
+        case TD_DOUBLE_HOLD:
+            layer_off(_NUMS);
+            unregister_mods(MOD_BIT(KC_LSFT));
+            break;
+        case TD_TRIPLE_HOLD:
+        case TD_MORE_HOLD:
+            unregister_code(KC_SPC);
+            break;
+        default:
+            break;
+    }
+    space_tap_state = TD_NONE;
 }
 
 // Set _BASE as the default layer.

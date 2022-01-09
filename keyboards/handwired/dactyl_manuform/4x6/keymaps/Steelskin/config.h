@@ -19,6 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+// Layers.
+enum _layer {
+  _BASE_WIN,
+  _BASE_MAC,
+  _BASE,
+  _NUMS,
+  _NUMPAD,
+  _FKEYS
+};
+
+#define COMBO_ONLY_FROM_LAYER _BASE
+
 /* Use I2C or Serial, not both */
 #define USE_SERIAL
 // #define USE_I2C
