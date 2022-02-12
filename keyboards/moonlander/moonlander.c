@@ -34,65 +34,65 @@ void dynamic_macro_record_end_user(int8_t direction) {
 }
 #endif
 
-void moonlander_led_task(void) {
-    if (is_launching) {
-        ML_LED_1(false);
-        ML_LED_2(false);
-        ML_LED_3(false);
-        ML_LED_4(false);
-        ML_LED_5(false);
-        ML_LED_6(false);
+// void moonlander_led_task(void) {
+//     if (is_launching) {
+//         ML_LED_1(false);
+//         ML_LED_2(false);
+//         ML_LED_3(false);
+//         ML_LED_4(false);
+//         ML_LED_5(false);
+//         ML_LED_6(false);
 
-        ML_LED_1(true);
-        wait_ms(250);
-        ML_LED_2(true);
-        wait_ms(250);
-        ML_LED_3(true);
-        wait_ms(250);
-        ML_LED_4(true);
-        wait_ms(250);
-        ML_LED_5(true);
-        wait_ms(250);
-        ML_LED_6(true);
-        wait_ms(250);
-        ML_LED_1(false);
-        wait_ms(250);
-        ML_LED_2(false);
-        wait_ms(250);
-        ML_LED_3(false);
-        wait_ms(250);
-        ML_LED_4(false);
-        wait_ms(250);
-        ML_LED_5(false);
-        wait_ms(250);
-        ML_LED_6(false);
-        wait_ms(250);
-        is_launching = false;
-        layer_state_set_kb(layer_state);
-    }
-#ifdef DYNAMIC_MACRO_ENABLE
-    else if (is_dynamic_recording) {
-        ML_LED_3(true);
-        wait_ms(100);
-        ML_LED_3(false);
-        wait_ms(155);
-    }
-#endif
-#if !defined(MOONLANDER_USER_LEDS)
-    else {
-        layer_state_set_kb(layer_state);
-    }
-#endif
-}
+//         ML_LED_1(true);
+//         wait_ms(250);
+//         ML_LED_2(true);
+//         wait_ms(250);
+//         ML_LED_3(true);
+//         wait_ms(250);
+//         ML_LED_4(true);
+//         wait_ms(250);
+//         ML_LED_5(true);
+//         wait_ms(250);
+//         ML_LED_6(true);
+//         wait_ms(250);
+//         ML_LED_1(false);
+//         wait_ms(250);
+//         ML_LED_2(false);
+//         wait_ms(250);
+//         ML_LED_3(false);
+//         wait_ms(250);
+//         ML_LED_4(false);
+//         wait_ms(250);
+//         ML_LED_5(false);
+//         wait_ms(250);
+//         ML_LED_6(false);
+//         wait_ms(250);
+//         is_launching = false;
+//         layer_state_set_kb(layer_state);
+//     }
+// #ifdef DYNAMIC_MACRO_ENABLE
+//     else if (is_dynamic_recording) {
+//         ML_LED_3(true);
+//         wait_ms(100);
+//         ML_LED_3(false);
+//         wait_ms(155);
+//     }
+// #endif
+// #if !defined(MOONLANDER_USER_LEDS)
+//     else {
+//         layer_state_set_kb(layer_state);
+//     }
+// #endif
+// }
 
-static THD_WORKING_AREA(waLEDThread, 128);
-static THD_FUNCTION(LEDThread, arg) {
-    (void)arg;
-    chRegSetThreadName("LEDThread");
-    while (true) {
-        moonlander_led_task();
-    }
-}
+// static THD_WORKING_AREA(waLEDThread, 128);
+// static THD_FUNCTION(LEDThread, arg) {
+//     (void)arg;
+//     chRegSetThreadName("LEDThread");
+//     while (true) {
+//         moonlander_led_task();
+//     }
+// }
 
 void keyboard_pre_init_kb(void) {
     setPinOutput(B5);
@@ -103,7 +103,8 @@ void keyboard_pre_init_kb(void) {
     writePinLow(B4);
     writePinLow(B3);
 
-    chThdCreateStatic(waLEDThread, sizeof(waLEDThread), NORMALPRIO - 16, LEDThread, NULL);
+    // chThdCreateStatic(waLEDThread, sizeof(waLEDThread), NORMALPRIO - 16, LEDThread, NULL);
+    is_launching = false;
 
     /* the array is initialized to 0, no need to re-set it here */
     // mcp23018_leds[0] = 0;  // blue

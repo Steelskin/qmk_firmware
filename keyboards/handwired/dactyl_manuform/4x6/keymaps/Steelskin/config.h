@@ -19,15 +19,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
+#if !defined(__ASSEMBLER__)
+
 // Layers.
 enum _layer {
   _BASE_WIN,
   _BASE_MAC,
   _BASE,
   _NUMS,
-  _NUMPAD,
   _FKEYS
 };
+
+#endif
 
 #define COMBO_ONLY_FROM_LAYER _BASE
 
